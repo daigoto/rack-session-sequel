@@ -46,7 +46,7 @@ module Rack
             :update_at => Time.now.utc
           )
         end
-warn "get_session#{generate_sid}"
+
         session.instance_variable_set('@old', {}.merge(session))
         return [sid, session]
       rescue 
@@ -57,20 +57,15 @@ warn "get_session#{generate_sid}"
       end
 
       def set_session(env, session_id, new_session, options)
-warn "set_session#{session_id}"
         expiry = options[:expire_after]
         expiry = expiry.nil? ? 0 : expiry + 1
 
-warn "set_session#{session_id}"
         @mutex.lock if env['rack.multithread']
         data = @dataset.filter('sid = ?', session_id).first
-warn "set_session#{session_id}"
         session = {}
-warn "set_session#{session_id}:#{data[:session]}:#{data[:session].unpack("m*")}"
         if data[:session]
           session = Marshal.load(data[:session].unpack("m*").first) 
         end
-warn "set_session#{session_id}:#{options[:renew]}:#{options[:drop]}"
         if options[:renew] or options[:drop]
           data.delete if data
           return false if options[:drop]
@@ -82,16 +77,12 @@ warn "set_session#{session_id}:#{options[:renew]}:#{options[:drop]}"
             :update_at => Time.now.utc
           )
         end
-warn "set_session#{session_id}"
         old_session = new_session.instance_variable_get('@old') || {}
-warn "set_session#{session_id}"
         session = merge_sessions session_id, old_session, new_session, session
-warn "set_session#{session_id}"
         @dataset.filter('sid = ?', session_id).update(
           :session   => [Marshal.dump(session)].pack('m*'),
           :update_at => Time.now.utc
         )
-warn "set_session#{session_id}"
         return session_id
       rescue 
         warn $!.inspect
