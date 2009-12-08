@@ -5,24 +5,24 @@ Rack::Session::Memcacheを参考に、Sequel経由でDBにセッション情報�
 
 ==migration
 
-require 'rubygems'
-require 'sequel'
-require 'sequel/extensions/migration'
+  require 'rubygems'
+  require 'sequel'
+  require 'sequel/extensions/migration'
 
-class CreateSessions < Sequel::Migration
-  def up
-    create_table :sessions do
-      primary_key :id
-      String :sid, :unique => true,  :null => false
-      text :session
-      DateTime :update_at
+  class CreateSessions < Sequel::Migration
+    def up
+      create_table :sessions do
+        primary_key :id
+        String :sid, :unique => true,  :null => false
+        text :session
+        DateTime :update_at
+      end
+    end
+
+    def down
+      self << 'drop table sessions'
     end
   end
-
-  def down
-    self << 'drop table users'
-  end
-end
 
 ==sample
 
