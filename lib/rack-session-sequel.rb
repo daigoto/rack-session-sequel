@@ -3,23 +3,20 @@ require 'sequel'
 
 module Rack
   module Session
-    # Rack::Session::Sequel provides simple cookie based session 
-management.
-    # Session data is stored in database. The corresponding session key 
-is
-    # maintained in the cookie.It made it referring to 
-Rack::Session::Memcache.
+    # Rack::Session::Sequel provides simple cookie based session management.
+    # Session data is stored in database. The corresponding session key is
+    # maintained in the cookie.It made it referring to Rack::Session::Memcache.
     # And is compatible with Rack::Session::Memcache.
 
     class Sequel < Abstract::ID
       attr_reader :mutex, :dataset
-      DEFAULT_OPTIONS = Abstract::ID::DEFAULT_OPTIONS.merge :namespace 
-=> 'rack:session'
+      DEFAULT_OPTIONS = Abstract::ID::DEFAULT_OPTIONS.merge \
+      :namespace => 'rack:session'
 
       def initialize(app, options={})
         super
         @mutex = Mutex.new
-        if options.keys? :dataset
+        if options.key? :dataset
           @dataset = options[:dataset] 
         else
           raise 'No Sequel Dataset'
@@ -40,8 +37,7 @@ Rack::Session::Memcache.
         end
         @mutex.lock if env['rack.multithread']
         unless sid and session
-          env['rack.errors'].puts("Session '#{sid.inspect}' not found, 
-initializing...") if $VERBOSE and not sid.nil?
+          env['rack.errors'].puts("Session '#{sid.inspect}' not found, initializing...") if $VERBOSE and not sid.nil?
           session = {}
           @dataset.insert(
             :sid       => generate_sid,
@@ -64,7 +60,11 @@ initializing...") if $VERBOSE and not sid.nil?
 
         @mutex.lock if env['rack.multithread']
         data = @dataset.filter('sid = ?', session_id).first
-        session = Marshal.load(data[:session].unpack("m*")) ||= {}
+        if data
+          session = Marshal.load(data[:session].unpack("m*")) 
+        else
+          session = {}
+        end
         if options[:renew] or options[:drop]
           data.delete if data
           return true if options[:drop]
@@ -76,8 +76,7 @@ initializing...") if $VERBOSE and not sid.nil?
           )
         end
         old_session = new_session.instance_variable_get('@old') || {}
-        session = merge_sessions session_id, old_session, new_session, 
-session
+        session = merge_sessions session_id, old_session, new_session, session
         @dataset.filter('sid = ?', session_id).update(
           :session   => [Marshal.dump(session)].pack('m*'),
           :update_at => Time.now.utc
@@ -100,13 +99,11 @@ session
         end
 
         delete = old.keys - new.keys
-        warn "//@#{sid}: delete #{delete*','}" if $VERBOSE and not 
-delete.empty?
+        warn "//@#{sid}: delete #{delete*','}" if $VERBOSE and not delete.empty?
         delete.each{|k| cur.delete k }
 
         update = new.keys.select{|k| new[k] != old[k] }
-        warn "//@#{sid}: update #{update*','}" if $VERBOSE and not 
-update.empty?
+        warn "//@#{sid}: update #{update*','}" if $VERBOSE and not update.empty?
         update.each{|k| cur[k] = new[k] }
         cur
       end
