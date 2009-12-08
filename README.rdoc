@@ -1,0 +1,49 @@
+= rack-session-sequel
+
+Rack::Session::Memcacheを参考に、Sequel経由でDBにセッション情報を保持する
+ものを作りました。主に、Sinatraで利用するつもりで書いてます。
+
+==migration
+
+require 'rubygems'
+require 'sequel'
+require 'sequel/extensions/migration'
+
+class CreateSessions < Sequel::Migration
+  def up
+    create_table :sessions do
+      primary_key :id
+      String :sid, :unique => true,  :null => false
+      text :session
+      DateTime :update_at
+    end
+  end
+
+  def down
+    self << 'drop table users'
+  end
+end
+
+==sample
+
+
+  require 'rubygems'
+  require 'sinatra'
+  require 'rack-session-sequel'
+  require 'sequel'
+  
+  DB = Sequel.sqlite
+  
+  use Rack::Session::Sequel , :dataset => DB[:sessions]
+  
+  get '/' do
+    if session['count']
+      session['count'] += 1
+    else
+      session['count']  = 1
+    end
+  
+    "count is #{session['count']}"
+  end
+
+
