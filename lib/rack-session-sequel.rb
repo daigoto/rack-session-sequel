@@ -46,7 +46,6 @@ module Rack
             :update_at => Time.now.utc
           )
         end
-
         session.instance_variable_set('@old', {}.merge(session))
         return [sid, session]
       rescue 
@@ -67,7 +66,7 @@ module Rack
           session = Marshal.load(data[:session].unpack("m*").first) 
         end
         if options[:renew] or options[:drop]
-          data.delete if data
+          @dataset.filter('sid = ?', session_id).delete if data
           return false if options[:drop]
           session_id = generate_sid # change new session_id
           renew_session = {}
