@@ -3,6 +3,14 @@
 Rack::Session::Memcacheを参考に、Sequel経由でDBにセッション情報を保持する
 ものを作りました。主に、Sinatraで利用するつもりで書いてます。
 
+この機能を用いて、ログイン状態管理などをするために、
+永続Cookieで「ブラウザを終了してもログイン状態を保持」することができるように
+してあります。
+その場合にはログイン成功時の処理に、rack.session.options に以下のように有効期限を
+付与してください。
+
+  env['rack.session.options'].merge!(:expire_after => 30 * 86400) # 30 days
+
 ==migration
 
   require 'rubygems'
