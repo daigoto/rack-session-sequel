@@ -11,7 +11,7 @@ module Rack
     class Sequel < Abstract::ID
       attr_reader :mutex, :dataset
       DEFAULT_OPTIONS = Abstract::ID::DEFAULT_OPTIONS.merge \
-      :namespace => 'rack:session'
+      :namespace => 'rack:session', :defer => true
 
       def initialize(app, options={})
         super
